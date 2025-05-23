@@ -135,16 +135,27 @@ The seeding script will create 40 sample apartments spread across 6 project name
 ## 📁 Project Structure
 
 ```
+apartment-app/
 ├── backend/
-│   ├── models/              # Mongoose schemas
-│   ├── routes/              # Express route handlers
-│   ├── controllers/         # API logic
-│   ├── seed.ts              # Seeder script
-│   └── config/              # MongoDB connection
+│ ├── models/ # Mongoose schemas
+│ ├── routes/ # Express route handlers
+│ ├── controllers/ # API logic
+│ ├── config/ # MongoDB connection logic
+│ ├── tests/ # Jest & Supertest test cases
+│ ├── seed.ts # Mock data seeder
+│ ├── server.ts # Main Express server entry
+│ ├── Dockerfile
+│ └── .env # Environment variables
 │
 ├── frontend/
-│   ├── components/          # UI components
-│   ├── pages/               # Next.js pages
-│   ├── types/               # Shared types
-│   └── styles/              # Tailwind config
+│ ├── components/ # UI components
+│ ├── pages/ # Next.js pages
+│ ├── types/ # Shared TypeScript interfaces
+│ ├── styles/ # Tailwind and global styles
+│ ├── Dockerfile
+│ └── .env.local # Frontend env vars
+│
+├── docker-compose.yml
+├── README.md
+└── .gitignore
 ```
