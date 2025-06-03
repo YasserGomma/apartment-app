@@ -1,6 +1,6 @@
 # 🏠 Apartment Listings App
 
-A full-stack web application for browsing, filtering, and managing apartment listings, built with **TypeScript**, **MongoDB**, **Express**, and **Next.js**.
+A full-stack web application for browsing, filtering apartment listings, built with **TypeScript**, **MongoDB**, **Express**, and **Next.js**.
 
 ## 🌟 Features
 
