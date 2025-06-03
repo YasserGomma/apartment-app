@@ -3,19 +3,19 @@ import Apartment from '../models/apartmentModel';
 
 /**
  * @route   GET /api/apartments
- * @desc    Fetch all apartments with optional filters (search, projects)
+ * @desc    Fetch all apartments with optional filters (search, projects) and pagination
  * @access  Public
  */
 export const getApartments = async (req: Request, res: Response) => {
   try {
-    const { search, projects } = req.query;
-    let query: any = {};
+    const { search, projects, page = 1, limit = 6 } = req.query;
+    const query: any = {};
 
     if (search) {
       query.$or = [
-        { unitName: { $regex: search, $options: 'i' } },
-        { unitNumber: { $regex: search, $options: 'i' } },
-        { project: { $regex: search, $options: 'i' } },
+        { unitName: new RegExp(search as string, 'i') },
+        { unitNumber: new RegExp(search as string, 'i') },
+        { project: new RegExp(search as string, 'i') },
       ];
     }
 
@@ -24,32 +24,34 @@ export const getApartments = async (req: Request, res: Response) => {
       query.project = { $in: projectArray };
     }
 
-    const apartments = await Apartment.find(query);
-    res.status(200).json(apartments);
+    const total = await Apartment.countDocuments(query);
+    const apartments = await Apartment.find(query)
+      .skip((+page - 1) * +limit)
+      .limit(+limit);
+
+    res.status(200).json({ data: apartments, total });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Error fetching apartments', error });
   }
 };
 
 /**
- * @route   POST /api/apartments
- * @desc    Add a new apartment to the database
+ * @route   GET /api/apartments/projects
+ * @desc    Get all unique project names
  * @access  Public
- * @body    { unitName, unitNumber, project, price, bedrooms, bathrooms, area, imageUrl, description }
  */
-export const addApartment = async (req: Request, res: Response) => {
+export const getProjects = async (req: Request, res: Response) => {
   try {
-    const apartment = new Apartment(req.body);
-    await apartment.save();
-    res.status(201).json(apartment);
+    const projects = await Apartment.distinct('project');
+    res.status(200).json(projects.sort());
   } catch (error) {
-    res.status(400).json({ message: 'Invalid data', error });
+    res.status(500).json({ message: 'Error fetching projects', error });
   }
 };
 
 /**
  * @route   GET /api/apartments/:id
- * @desc    Fetch a single apartment by its ID
+ * @desc    Get a single apartment by ID
  * @access  Public
  */
 export const getApartmentById = async (req: Request, res: Response) => {
@@ -60,23 +62,28 @@ export const getApartmentById = async (req: Request, res: Response) => {
     }
     res.status(200).json(apartment);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Error fetching apartment', error });
   }
 };
 
 /**
- * @route   GET /api/apartments/projects
- * @desc    Get all unique project names for filtering
- * @access  Public
+ * @route   POST /api/apartments
+ * @desc    Add a new apartment
+ * @access  Public (should be protected in production)
  */
-export const getProjects = async (req: Request, res: Response) => {
+export const addApartment = async (req: Request, res: Response) => {
   try {
-    console.log('[GET] /projects hit');
-    const projects = await Apartment.distinct('project');
-    console.log('[DB] Projects found:', projects);
-    res.status(200).json(projects);
-  } catch (error: any) {
-    console.error('[ERROR] getProjects:', error);
-    res.status(500).json({ message: 'Server error', error: error.stack });
+    const { unitName, unitNumber, project, ...otherData } = req.body;
+
+    if (!unitName || !unitNumber || !project) {
+      return res.status(400).json({ message: 'Unit Name, Unit Number, and Project are required' });
+    }
+
+    const newApartment = new Apartment({ unitName, unitNumber, project, ...otherData });
+    await newApartment.save();
+
+    res.status(201).json(newApartment);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating apartment', error });
   }
 };
